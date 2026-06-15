@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>2026 世界杯预测项目仪表盘</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="side-nav" aria-label="页面导航">
+        <div class="brand-mark">
+          <span class="brand-icon" aria-hidden="true">WC</span>
+          <span>
+            <strong>World Cup</strong>
+            <small>Prediction</small>
+          </span>
+        </div>
+        <nav>
+          <a href="#overview" class="nav-link is-active">概览</a>
+          <a href="#groups" class="nav-link">小组形势</a>
+          <a href="#results" class="nav-link">已赛结果</a>
+          <a href="#schedule" class="nav-link">后续赛程</a>
+          <a href="#method" class="nav-link">研究方法</a>
+          <a href="#deliverables" class="nav-link">提交文件</a>
+        </nav>
+      </aside>
+
+      <main>
+        <section id="overview" class="topbar">
+          <div>
+            <h1>2026 年世界杯冠军概率预测</h1>
+            <p>赛中展示版，截至 2026-06-15；分组、排名、赛程和淘汰赛槽位已按百度体育页面与用户提供截图重新校准。</p>
+          </div>
+          <div class="run-state">
+            <span class="state-dot"></span>
+            <span>R 代码已接入真实赛程，历史训练集待补齐</span>
+          </div>
+        </section>
+
+        <section class="metric-grid" aria-label="项目指标">
+          <article class="metric-card">
+            <span class="metric-label">球队数量</span>
+            <strong id="metric-teams">48</strong>
+            <small>12 组，每组 4 队</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">已核实赛果</span>
+            <strong id="metric-results">12</strong>
+            <small>用于赛中更新，不进入赛前训练</small>
+          </article>
+          <article class="metric-card warning">
+            <span class="metric-label">后续赛程预览</span>
+            <strong id="metric-next">8</strong>
+            <small>网页展示 6 月 16-17 日赛程</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">核心语言</span>
+            <strong>R</strong>
+            <small>base R + glm 泊松回归</small>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel wide" id="groups">
+            <div class="panel-header">
+              <div>
+                <h2>小组实时形势</h2>
+                <p>按百度体育排名页和用户截图校准；同分组排序保留页面当前口径。</p>
+              </div>
+              <select id="group-filter" aria-label="选择小组"></select>
+            </div>
+            <div id="group-standings" class="group-board"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>已赛结果影响</h2>
+                <p>当前最明显的模型偏差方向。</p>
+              </div>
+            </div>
+            <div id="impact-list" class="impact-list"></div>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel" id="results">
+            <div class="panel-header">
+              <div>
+                <h2>截至 6 月 15 日已赛结果</h2>
+                <p>比分来自百度体育赛程页与用户截图核对，后续可继续追加。</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>组</th>
+                    <th>比赛</th>
+                    <th>比分</th>
+                  </tr>
+                </thead>
+                <tbody id="results-body"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>进球信号</h2>
+                <p>已赛比赛中净胜球最大的球队。</p>
+              </div>
+            </div>
+            <div id="goal-bars" class="goal-bars" aria-label="净胜球条形图"></div>
+          </article>
+        </section>
+
+        <section class="content-grid" id="schedule">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>后续小组赛预览</h2>
+                <p>展示 6 月 16-17 日接下来 8 场，完整 72 场已写入 `data/worldcup_2026_schedule.csv`。</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>时间</th>
+                    <th>组</th>
+                    <th>比赛</th>
+                    <th>场地</th>
+                  </tr>
+                </thead>
+                <tbody id="next-matches-body"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>淘汰赛槽位样例</h2>
+                <p>完整 1/16 决赛至决赛路径已写入赛程 CSV，第三名槽位按图中候选集合保留。</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>场次</th>
+                    <th>时间</th>
+                    <th>对阵槽位</th>
+                    <th>场地</th>
+                  </tr>
+                </thead>
+                <tbody id="knockout-body"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel" id="method">
+          <div class="panel-header">
+            <div>
+              <h2>研究方法链条</h2>
+              <p>正式报告采用“单场进球模型 + 真实赛制蒙特卡洛模拟”。</p>
+            </div>
+          </div>
+          <div class="method-flow">
+            <div class="method-step">
+              <span>1</span>
+              <strong>历史比赛数据</strong>
+              <p>2010-2024 训练，2025-2026 测试，截止 2026-06-10。</p>
+            </div>
+            <div class="method-step">
+              <span>2</span>
+              <strong>泊松回归</strong>
+              <p>R 语言 `glm(..., family = poisson())` 预测双方进球数。</p>
+            </div>
+            <div class="method-step">
+              <span>3</span>
+              <strong>蒙特卡洛模拟</strong>
+              <p>模拟 10000 次完整赛事，记录各队最远轮次。</p>
+            </div>
+            <div class="method-step">
+              <span>4</span>
+              <strong>图表输出</strong>
+              <p>冠军概率、四强概率、晋级阶梯图和单队漏斗图。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="content-grid" id="deliverables">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>R 程序运行状态</h2>
+                <p>已实际运行，当前停止在缺少正式输入文件处。</p>
+              </div>
+            </div>
+            <div class="status-list">
+              <div class="status-row ok"><span></span><p>R 脚本解析通过：`validate_inputs.R`、`worldcup_predictor.R`、`make_charts.R`。</p></div>
+              <div class="status-row ok"><span></span><p>`data/worldcup_2026_schedule.csv` 已按截图补齐小组赛与淘汰赛槽位。</p></div>
+              <div class="status-row error"><span></span><p>缺少 `data/historical_matches.csv`，主程序停止。</p></div>
+              <div class="status-row ok"><span></span><p>已赛结果和当前排名 CSV 已切换为中文球队口径。</p></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>提交文件清单</h2>
+                <p>报告 + R 代码 + 数据模板。</p>
+              </div>
+            </div>
+            <ul class="file-list">
+              <li><strong>项目报告</strong><span>2026世界杯冠军概率预测报告_草稿.docx</span></li>
+              <li><strong>R 主程序</strong><span>R/worldcup_predictor.R</span></li>
+              <li><strong>输入校验</strong><span>R/validate_inputs.R</span></li>
+              <li><strong>图表生成</strong><span>R/make_charts.R</span></li>
+              <li><strong>数据模板</strong><span>data/*.csv</span></li>
+            </ul>
+          </article>
+        </section>
+      </main>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>

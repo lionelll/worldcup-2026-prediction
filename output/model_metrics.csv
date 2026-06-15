@@ -1,0 +1,14 @@
+"metric","value"
+"samples",1313
+"accuracy",0.637471439451637
+"brier_score",0.479384318783794
+"log_loss",0.82477223407572
+"confusion_H_pred_H",588
+"confusion_H_pred_D",0
+"confusion_H_pred_A",52
+"confusion_D_pred_H",205
+"confusion_D_pred_D",0
+"confusion_D_pred_A",90
+"confusion_A_pred_H",129
+"confusion_A_pred_D",0
+"confusion_A_pred_A",249
