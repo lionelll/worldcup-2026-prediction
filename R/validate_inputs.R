@@ -16,6 +16,9 @@ get_arg <- function(flag, default) {
 groups_path <- get_arg("--groups", "data/worldcup_2026_groups.csv")
 schedule_path <- get_arg("--schedule", "data/worldcup_2026_schedule.csv")
 history_path <- get_arg("--history", "data/historical_matches.csv")
+results_path <- get_arg("--results", "data/worldcup_2026_results_asof_2026-06-20.csv")
+annex_path <- get_arg("--annex-c", "data/annex_c_full_mapping.csv")
+allow_unconfirmed_data <- "--allow-unconfirmed-data" %in% args
 
 required_groups <- c("group", "slot", "team")
 required_schedule <- c(
@@ -132,13 +135,60 @@ validate_history <- function(path) {
   invisible(TRUE)
 }
 
+validate_results <- function(path) {
+  df <- read_required_csv(path)
+  required <- c("match_date", "group", "team_1", "team_2", "team_1_score", "team_2_score")
+  require_columns(df, required, path)
+  if (any(is.na(as.Date(df$match_date)))) stop("Results contain invalid match_date values.", call. = FALSE)
+  if (any(is.na(as.integer(df$team_1_score))) || any(is.na(as.integer(df$team_2_score)))) {
+    stop("Result scores must be integers.", call. = FALSE)
+  }
+  if ("stage" %in% names(df) && any(tolower(df$stage) != "group")) {
+    knockout <- df[tolower(df$stage) != "group", , drop = FALSE]
+    require_columns(knockout, c("match_id", "winner", "decided_by"), path)
+    if (any(knockout$match_id == "") || any(knockout$winner == "")) {
+      stop("Every knockout result must include match_id and winner.", call. = FALSE)
+    }
+    allowed <- c("90min", "extra_time", "penalties")
+    if (any(!knockout$decided_by %in% allowed)) {
+      stop("decided_by must be 90min, extra_time, or penalties.", call. = FALSE)
+    }
+  }
+  invisible(TRUE)
+}
+
+canonical_groups <- function(x) paste(sort(unique(strsplit(toupper(gsub("[^A-L]", "", x)), "")[[1]])), collapse = "")
+
+validate_annex <- function(path) {
+  if (!file.exists(path)) {
+    if (allow_unconfirmed_data) {
+      warning("Annex C mapping is absent; validation continues only for debug mode.", call. = FALSE)
+      return(invisible(FALSE))
+    }
+    stop(sprintf("Official Annex C mapping not found: %s", path), call. = FALSE)
+  }
+  df <- read_required_csv(path)
+  require_columns(df, c("qualified_groups", "match_id", "third_group"), path)
+  df$qualified_groups <- vapply(df$qualified_groups, canonical_groups, character(1))
+  if (length(unique(df$qualified_groups)) != choose(12, 8)) {
+    stop("Annex C must contain 495 unique combinations.", call. = FALSE)
+  }
+  if (any(table(df$qualified_groups) != 8)) {
+    stop("Every Annex C combination must contain exactly eight assignments.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 validate_groups(groups_path)
 validate_schedule(schedule_path)
 validate_history(history_path)
+validate_results(results_path)
+validate_annex(annex_path)
 
 cat("Input validation passed.\n")
 cat(sprintf("Groups: %s\n", groups_path))
 cat(sprintf("Schedule: %s\n", schedule_path))
 cat(sprintf("History: %s\n", history_path))
+cat(sprintf("Results: %s\n", results_path))
+cat(sprintf("Annex C: %s\n", ifelse(file.exists(annex_path), annex_path, "missing (debug only)")))
 cat(sprintf("Date cutoff: %s\n", cutoff))
-

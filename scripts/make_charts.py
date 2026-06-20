@@ -15,11 +15,42 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = PROJECT_ROOT / "output"
+DEFAULT_APPROVAL = PROJECT_ROOT / "data" / "data_approval.csv"
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         return list(csv.DictReader(handle))
+
+
+def approved_value(value: str) -> bool:
+    return str(value).strip().lower() in {"true", "1", "yes", "y", "approved"}
+
+
+def enforce_data_approval(path: Path, allow_unconfirmed: bool) -> None:
+    if allow_unconfirmed:
+        print("WARNING: --allow-unconfirmed-data enabled. Generated charts are for debugging only.")
+        return
+    required = {
+        "worldcup_2026_groups.csv",
+        "worldcup_2026_schedule.csv",
+        "worldcup_2026_results_asof_2026-06-15.csv",
+        "historical_matches.csv",
+        "annex_c_full_mapping",
+    }
+    if not path.exists():
+        raise SystemExit(f"Data approval file not found: {path}")
+    rows = read_csv(path)
+    approval = {row.get("file", ""): approved_value(row.get("approved", "")) for row in rows}
+    missing = sorted(required - set(approval))
+    pending = sorted(name for name in required if not approval.get(name, False))
+    if missing or pending:
+        blocked = missing + pending
+        raise SystemExit(
+            "Data source confirmation required before formal chart generation: "
+            + ", ".join(blocked)
+            + ". Use --allow-unconfirmed-data only for debugging."
+        )
 
 
 def svg_text(x: float, y: float, text: str, size: int = 12, anchor: str = "start", weight: str = "normal") -> str:
@@ -145,7 +176,10 @@ def funnel_chart(rows: list[dict[str, str]], out_path: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate SVG charts from model outputs.")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
+    parser.add_argument("--approval", default=str(DEFAULT_APPROVAL))
+    parser.add_argument("--allow-unconfirmed-data", action="store_true")
     args = parser.parse_args()
+    enforce_data_approval(Path(args.approval), args.allow_unconfirmed_data)
     output = Path(args.output)
     chart_dir = output / "figures"
     chart_dir.mkdir(parents=True, exist_ok=True)
@@ -163,4 +197,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

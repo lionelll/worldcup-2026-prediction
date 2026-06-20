@@ -16,7 +16,7 @@ from docx.shared import Inches, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKDOWN = ROOT / "2026世界杯冠军概率预测报告_草稿.md"
-OUTPUT = ROOT / "2026世界杯冠军概率预测报告_草稿.docx"
+OUTPUT = ROOT / "2026世界杯冠军概率预测报告.docx"
 CJK_FONT = "PingFang SC"
 
 
@@ -62,6 +62,12 @@ def set_repeat_table_header(row) -> None:
     tr_pr.append(tbl_header)
 
 
+def set_row_cant_split(row) -> None:
+    tr_pr = row._tr.get_or_add_trPr()
+    cant_split = OxmlElement("w:cantSplit")
+    tr_pr.append(cant_split)
+
+
 def add_table(doc: Document, lines: list[str]) -> None:
     rows = []
     for line in lines:
@@ -81,6 +87,7 @@ def add_table(doc: Document, lines: list[str]) -> None:
 
     widths = [2400] + [int((9360 - 2400) / max(1, max_cols - 1))] * (max_cols - 1)
     for r_idx, row in enumerate(rows):
+        set_row_cant_split(table.rows[r_idx])
         for c_idx in range(max_cols):
             cell = table.cell(r_idx, c_idx)
             cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER

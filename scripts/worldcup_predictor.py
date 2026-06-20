@@ -14,7 +14,7 @@ Required:
 
 Optional:
   data/team_elo.csv
-  data/worldcup_2026_results_asof_2026-06-15.csv
+  data/worldcup_2026_results_asof_2026-06-17.csv
 
 Outputs
 -------
@@ -52,8 +52,9 @@ DEFAULT_GROUPS = PROJECT_ROOT / "data/worldcup_2026_groups.csv"
 DEFAULT_SCHEDULE = PROJECT_ROOT / "data/worldcup_2026_schedule.csv"
 DEFAULT_HISTORY = PROJECT_ROOT / "data/historical_matches.csv"
 DEFAULT_ELO = PROJECT_ROOT / "data/team_elo.csv"
-DEFAULT_RESULTS = PROJECT_ROOT / "data/worldcup_2026_results_asof_2026-06-15.csv"
+DEFAULT_RESULTS = PROJECT_ROOT / "data/worldcup_2026_results_asof_2026-06-17.csv"
 DEFAULT_OUTPUT = PROJECT_ROOT / "output"
+DEFAULT_APPROVAL = PROJECT_ROOT / "data/data_approval.csv"
 
 DATE_CUTOFF = date(2026, 6, 10)
 TRAIN_END = date(2024, 12, 31)
@@ -737,7 +738,47 @@ def observed_impact_rows(groups: dict[str, list[str]], observed_results: dict[tu
     return rows
 
 
+def approved_value(value: str) -> bool:
+    return str(value).strip().lower() in {"true", "1", "yes", "y", "approved"}
+
+
+def enforce_data_approval(args: argparse.Namespace) -> None:
+    if args.allow_unconfirmed_data:
+        print("WARNING: --allow-unconfirmed-data enabled. Results are for debugging only, not for the formal report.")
+        return
+
+    required = {
+        Path(args.groups).name,
+        Path(args.history).name,
+        "worldcup_2026_results_asof_2026-06-15.csv",
+        "annex_c_full_mapping",
+    }
+    schedule_path = Path(args.schedule)
+    if schedule_path.exists() or not args.allow_generated_group_schedule:
+        required.add(schedule_path.name)
+    elo_path = Path(args.elo) if args.elo else None
+    if elo_path and elo_path.exists():
+        required.add(elo_path.name)
+
+    approval_path = Path(args.approval)
+    if not approval_path.exists():
+        raise SystemExit(f"Data approval file not found: {approval_path}")
+    with approval_path.open(encoding="utf-8-sig", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    approval = {row.get("file", ""): approved_value(row.get("approved", "")) for row in rows}
+    missing = sorted(required - set(approval))
+    pending = sorted(name for name in required if not approval.get(name, False))
+    if missing or pending:
+        blocked = missing + pending
+        raise SystemExit(
+            "Data source confirmation required before formal modeling: "
+            + ", ".join(blocked)
+            + ". Use --allow-unconfirmed-data only for debugging."
+        )
+
+
 def run(args: argparse.Namespace) -> None:
+    enforce_data_approval(args)
     output_dir = Path(args.output)
     ensure_dir(output_dir)
 
@@ -781,9 +822,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--elo", default=str(DEFAULT_ELO))
     parser.add_argument("--results", default=str(DEFAULT_RESULTS))
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
+    parser.add_argument("--approval", default=str(DEFAULT_APPROVAL))
     parser.add_argument("--simulations", type=int, default=DEFAULT_SIMULATIONS)
     parser.add_argument("--seed", type=int, default=RANDOM_SEED)
     parser.add_argument("--allow-generated-group-schedule", action="store_true", help="Use generated group round-robin fixtures if official schedule CSV is absent. Dry-run only.")
+    parser.add_argument("--allow-unconfirmed-data", action="store_true", help="Run with unconfirmed data for code debugging only.")
     return parser
 
 

@@ -25,7 +25,7 @@ python3 scripts/validate_inputs.py
 5. 训练集必须覆盖 `2010-01-01` 至 `2024-12-31` 区间。
 6. 测试集必须覆盖 `2025-01-01` 至 `2026-06-10` 区间。
 
-正式跑模型前先通过该脚本，避免报告口径和数据口径不一致。
+正式跑模型前先通过该脚本，避免报告口径和数据口径不一致。注意：该脚本只做结构校验，不等于确认数据来源。
 
 ## worldcup_predictor.py
 
@@ -37,7 +37,7 @@ python3 scripts/validate_inputs.py
 - 泊松回归训练。
 - 单场模型指标输出。
 - 小组赛与淘汰赛蒙特卡洛模拟。
-- 截至 2026-06-15 已赛结果更新。
+- 截至 2026-06-20 09:18 明确完赛的 30 场结果更新。
 - 各队晋级概率、冠军概率、四强概率输出。
 
 正式运行：
@@ -45,6 +45,8 @@ python3 scripts/validate_inputs.py
 ```bash
 python3 scripts/worldcup_predictor.py
 ```
+
+正式结果必须先确认 `data/data_approval.csv` 中的关键数据项。未确认数据只能用于调试，不得写入报告结论。
 
 当前项目已包含赛程文件；如果在空环境中只做代码流程检查：
 
@@ -68,3 +70,5 @@ python3 scripts/worldcup_predictor.py --allow-generated-group-schedule
 ```bash
 python3 scripts/make_charts.py
 ```
+
+未完成数据确认时，图表脚本会停止。只做调试可显式使用 `--allow-unconfirmed-data`，但生成图表不能作为正式提交结果。

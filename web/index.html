@@ -4,7 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>2026 世界杯预测项目仪表盘</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260620c" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
   </head>
   <body>
     <div class="app-shell">
@@ -18,9 +19,11 @@
         </div>
         <nav>
           <a href="#overview" class="nav-link is-active">概览</a>
+          <a href="#prediction" class="nav-link">数据确认</a>
           <a href="#groups" class="nav-link">小组形势</a>
           <a href="#results" class="nav-link">已赛结果</a>
           <a href="#schedule" class="nav-link">后续赛程</a>
+          <a href="#routes" class="nav-link">晋级路线</a>
           <a href="#method" class="nav-link">研究方法</a>
           <a href="#deliverables" class="nav-link">提交文件</a>
         </nav>
@@ -30,35 +33,103 @@
         <section id="overview" class="topbar">
           <div>
             <h1>2026 年世界杯冠军概率预测</h1>
-            <p>赛中展示版，截至 2026-06-15；分组、排名、赛程和淘汰赛槽位已按百度体育页面与用户提供截图重新校准。</p>
+            <p>赛中数据确认版，截至 2026-06-20 09:18；已录入 30 场完赛结果并滚动更新模型，正式使用前仍需确认数据来源与比分。</p>
           </div>
-          <div class="run-state">
+          <div class="run-state warning">
             <span class="state-dot"></span>
-            <span>R 代码已接入真实赛程，历史训练集待补齐</span>
+            <span>正式预测暂停：关键数据仍待确认</span>
           </div>
+          <button id="btn-pdf" class="btn-pdf" onclick="downloadPDF()">下载 PDF</button>
         </section>
 
         <section class="metric-grid" aria-label="项目指标">
-          <article class="metric-card">
-            <span class="metric-label">球队数量</span>
-            <strong id="metric-teams">48</strong>
-            <small>12 组，每组 4 队</small>
+          <article class="metric-card highlight">
+            <span class="metric-label">正式预测</span>
+            <strong id="metric-champion">暂停</strong>
+            <small id="metric-champion-prob">等待数据确认</small>
           </article>
           <article class="metric-card">
-            <span class="metric-label">已核实赛果</span>
-            <strong id="metric-results">12</strong>
-            <small>用于赛中更新，不进入赛前训练</small>
-          </article>
-          <article class="metric-card warning">
-            <span class="metric-label">后续赛程预览</span>
-            <strong id="metric-next">8</strong>
-            <small>网页展示 6 月 16-17 日赛程</small>
+            <span class="metric-label">确认状态</span>
+            <strong id="metric-approval">0 / 8</strong>
+            <small>关键数据项 approved=true 后才运行</small>
           </article>
           <article class="metric-card">
-            <span class="metric-label">核心语言</span>
+            <span class="metric-label">检测到训练集</span>
+            <strong id="metric-history">15,817</strong>
+            <small>字段通过，来源待确认</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">代码语言</span>
             <strong>R</strong>
-            <small>base R + glm 泊松回归</small>
+            <small>主程序默认阻止未确认数据</small>
           </article>
+        </section>
+
+        <!-- 预测结果 -->
+        <section id="prediction">
+          <div class="content-grid">
+            <article class="panel wide">
+              <div class="panel-header">
+                <div>
+                  <h2>数据确认清单</h2>
+                  <p>下面项目全部确认后，才能生成正式冠军概率、四强概率和晋级概率图。</p>
+                </div>
+              </div>
+              <div id="champion-chart" class="champion-chart"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>当前禁止写入报告的输出</h2>
+                  <p>旧 output 中的概率和图表只保留为调试痕迹，确认前不能作为结论。</p>
+                </div>
+              </div>
+              <div id="final-four-chart" class="goal-bars"></div>
+            </article>
+          </div>
+
+          <div class="content-grid">
+            <article class="panel wide">
+              <div class="panel-header">
+                <div>
+                  <h2>待确认数据项</h2>
+                  <p>数据事实必须由你确认或给出权威来源，不能自动补全。</p>
+                </div>
+                <select id="team-filter" aria-label="筛选确认项"></select>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>数据项</th>
+                      <th>当前状态</th>
+                      <th>需要你确认</th>
+                      <th>正式可用</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stage-body"></tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>运行保护</h2>
+                  <p>R 程序默认拒绝未确认数据进入正式模型。</p>
+                </div>
+              </div>
+              <div id="model-metrics" class="model-metrics"></div>
+              <div class="panel-header" style="margin-top:16px">
+                <div>
+                  <h2>需要补齐或确认的材料</h2>
+                  <p>确认后再恢复图表生成。</p>
+                </div>
+              </div>
+              <div id="coef-chart" class="goal-bars"></div>
+            </article>
+          </div>
         </section>
 
         <section class="content-grid">
@@ -66,7 +137,7 @@
             <div class="panel-header">
               <div>
                 <h2>小组实时形势</h2>
-                <p>按百度体育排名页和用户截图校准；同分组排序保留页面当前口径。</p>
+                <p>按用户提供页面与截图录入，当前仅作待确认展示；确认前不作为正式模型输入结论。</p>
               </div>
               <select id="group-filter" aria-label="选择小组"></select>
             </div>
@@ -76,8 +147,8 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2>已赛结果影响</h2>
-                <p>当前最明显的模型偏差方向。</p>
+                <h2>确认提醒</h2>
+                <p>比分、积分和赛程确认后，才做正式误差分析。</p>
               </div>
             </div>
             <div id="impact-list" class="impact-list"></div>
@@ -88,8 +159,8 @@
           <article class="panel" id="results">
             <div class="panel-header">
               <div>
-                <h2>截至 6 月 15 日已赛结果</h2>
-                <p>比分来自百度体育赛程页与用户截图核对，后续可继续追加。</p>
+                <h2>截至 6 月 20 日 09:18 已录入结果</h2>
+                <p>以下 30 场比分来自用户提供页面、截图及百度体育结构化赛果；只纳入明确标记已结束的比赛，当前状态为待确认。</p>
               </div>
             </div>
             <div class="table-wrap">
@@ -110,8 +181,8 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2>进球信号</h2>
-                <p>已赛比赛中净胜球最大的球队。</p>
+                <h2>已录入净胜球概览</h2>
+                <p>仅用于人工核对；确认前不写入正式结论。</p>
               </div>
             </div>
             <div id="goal-bars" class="goal-bars" aria-label="净胜球条形图"></div>
@@ -123,7 +194,7 @@
             <div class="panel-header">
               <div>
                 <h2>后续小组赛预览</h2>
-                <p>展示 6 月 16-17 日接下来 8 场，完整 72 场已写入 `data/worldcup_2026_schedule.csv`。</p>
+                <p>展示当前后续 4 场，完整 72 场已录入 `data/worldcup_2026_schedule.csv`，待确认。</p>
               </div>
             </div>
             <div class="table-wrap">
@@ -145,7 +216,7 @@
             <div class="panel-header">
               <div>
                 <h2>淘汰赛槽位样例</h2>
-                <p>完整 1/16 决赛至决赛路径已写入赛程 CSV，第三名槽位按图中候选集合保留。</p>
+                <p>完整 1/16 决赛至决赛路径已录入赛程 CSV，第三名槽位按图中候选集合保留，待 Annex C 完整映射确认。</p>
               </div>
             </div>
             <div class="table-wrap">
@@ -164,23 +235,75 @@
           </article>
         </section>
 
+        <section id="routes" class="route-section">
+          <article class="panel">
+            <div class="panel-header route-header">
+              <div>
+                <h2>世界杯整体路径</h2>
+                <p>小组晋级概览与 32 强至决赛签表使用同一批蒙特卡洛输出。</p>
+              </div>
+              <div class="route-toolbar">
+                <div class="segmented" role="tablist" aria-label="整体路径视图">
+                  <button type="button" class="segment is-active" data-overall-view="groups">小组概览</button>
+                  <button type="button" class="segment" data-overall-view="bracket">完整签表</button>
+                </div>
+                <label class="zoom-control">缩放
+                  <input id="route-zoom" type="range" min="75" max="135" value="100" step="5" />
+                </label>
+              </div>
+            </div>
+            <div id="route-data-state" class="route-data-state">正在读取路线数据...</div>
+            <div class="route-viewport">
+              <div id="overall-route-canvas" class="overall-route-canvas" aria-live="polite"></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header route-header">
+              <div>
+                <h2>五支热门球队条件晋级路线</h2>
+                <p>点击某个潜在对手后，下一轮只统计经过该分支的模拟样本。</p>
+              </div>
+              <div class="route-toolbar">
+                <select id="route-team" aria-label="选择球队">
+                  <option value="西班牙">西班牙</option>
+                  <option value="法国">法国</option>
+                  <option value="阿根廷">阿根廷</option>
+                  <option value="巴西">巴西</option>
+                  <option value="葡萄牙">葡萄牙</option>
+                </select>
+                <div class="segmented" aria-label="预测快照">
+                  <button type="button" class="segment is-active">当前赛中版</button>
+                  <button type="button" class="segment" disabled title="赛前基准缓存尚未生成">赛前基准版</button>
+                </div>
+              </div>
+            </div>
+            <div class="route-progress" id="route-progress"></div>
+            <div class="route-breadcrumb-row">
+              <button id="route-back" class="route-back" type="button" disabled aria-label="返回上一轮">←</button>
+              <div id="route-breadcrumb" class="route-breadcrumb">当前路径：起点</div>
+            </div>
+            <div id="team-route-canvas" class="team-route-canvas" aria-live="polite"></div>
+          </article>
+        </section>
+
         <section class="panel" id="method">
           <div class="panel-header">
             <div>
               <h2>研究方法链条</h2>
-              <p>正式报告采用“单场进球模型 + 真实赛制蒙特卡洛模拟”。</p>
+              <p>正式报告采用“单场进球模型 + 真实赛制蒙特卡洛模拟”，但必须先完成数据确认。</p>
             </div>
           </div>
           <div class="method-flow">
             <div class="method-step">
               <span>1</span>
               <strong>历史比赛数据</strong>
-              <p>2010-2024 训练，2025-2026 测试，截止 2026-06-10。</p>
+              <p>2010-2024 训练，2025 校准平局概率，2026-06-10 前独立验证；特征严格按赛前滚动构造。</p>
             </div>
             <div class="method-step">
               <span>2</span>
               <strong>泊松回归</strong>
-              <p>R 语言 `glm(..., family = poisson())` 预测双方进球数。</p>
+              <p>R 语言 `glm(..., family = poisson())` 预测进球数，已赛结果滚动更新 Elo 与近 10 场状态。</p>
             </div>
             <div class="method-step">
               <span>3</span>
@@ -190,8 +313,26 @@
             <div class="method-step">
               <span>4</span>
               <strong>图表输出</strong>
-              <p>冠军概率、四强概率、晋级阶梯图和单队漏斗图。</p>
+              <p>数据确认后再输出冠军概率、四强概率、晋级阶梯图和单队漏斗图。</p>
             </div>
+          </div>
+          <div class="method-validation" id="method-validation" aria-live="polite">
+            <article>
+              <h3>数据质量审计</h3>
+              <div id="method-data-audit" class="method-stat-list">正在读取...</div>
+            </article>
+            <article>
+              <h3>泊松拟合诊断</h3>
+              <div id="method-poisson-fit" class="method-stat-list">正在读取...</div>
+            </article>
+            <article>
+              <h3>时间滚动验证</h3>
+              <div id="method-model-selection" class="method-stat-list">正在读取...</div>
+            </article>
+            <article>
+              <h3>逻辑回归对照</h3>
+              <div id="method-logistic" class="method-stat-list">正在读取...</div>
+            </article>
           </div>
         </section>
 
@@ -200,14 +341,16 @@
             <div class="panel-header">
               <div>
                 <h2>R 程序运行状态</h2>
-                <p>已实际运行，当前停止在缺少正式输入文件处。</p>
+                <p>正式管线当前被数据确认闸门暂停。</p>
               </div>
             </div>
             <div class="status-list">
-              <div class="status-row ok"><span></span><p>R 脚本解析通过：`validate_inputs.R`、`worldcup_predictor.R`、`make_charts.R`。</p></div>
-              <div class="status-row ok"><span></span><p>`data/worldcup_2026_schedule.csv` 已按截图补齐小组赛与淘汰赛槽位。</p></div>
-              <div class="status-row error"><span></span><p>缺少 `data/historical_matches.csv`，主程序停止。</p></div>
-              <div class="status-row ok"><span></span><p>已赛结果和当前排名 CSV 已切换为中文球队口径。</p></div>
+              <div class="status-row ok"><span></span><p>结构校验通过：validate_inputs.R 可检查字段和日期边界。</p></div>
+              <div class="status-row warn"><span></span><p>历史数据 15,817 场比赛已检测到，但来源、快照日期和使用口径待确认。</p></div>
+              <div class="status-row warn"><span></span><p>泊松回归和蒙特卡洛正式结果暂不输出，避免使用未经确认的数据。</p></div>
+              <div class="status-row warn"><span></span><p>旧 output 概率和图表已标记为调试输出，确认前不能写入正式报告。</p></div>
+              <div class="status-row ok"><span></span><p>模型改进：已修复历史 Elo 时间泄漏，并加入独立平局概率校准。</p></div>
+              <div class="status-row warn"><span></span><p>赛中更新：截至 2026-06-20 09:18 明确完赛的 30 场比分已录入，等待你最终确认。</p></div>
             </div>
           </article>
 
@@ -215,20 +358,21 @@
             <div class="panel-header">
               <div>
                 <h2>提交文件清单</h2>
-                <p>报告 + R 代码 + 数据模板。</p>
+                <p>报告 + R 代码 + 数据确认清单。</p>
               </div>
             </div>
             <ul class="file-list">
-              <li><strong>项目报告</strong><span>2026世界杯冠军概率预测报告_草稿.docx</span></li>
+              <li><strong>项目报告</strong><span>2026世界杯冠军概率预测课程分析报告_数据待确认版.docx</span></li>
               <li><strong>R 主程序</strong><span>R/worldcup_predictor.R</span></li>
               <li><strong>输入校验</strong><span>R/validate_inputs.R</span></li>
               <li><strong>图表生成</strong><span>R/make_charts.R</span></li>
-              <li><strong>数据模板</strong><span>data/*.csv</span></li>
+              <li><strong>路线测试</strong><span>R/test_route_outputs.R</span></li>
+              <li><strong>数据确认</strong><span>data/DATA_STATUS.md + data/data_approval.csv</span></li>
             </ul>
           </article>
         </section>
       </main>
     </div>
-    <script src="./app.js"></script>
+    <script src="./app.js?v=20260620b"></script>
   </body>
 </html>

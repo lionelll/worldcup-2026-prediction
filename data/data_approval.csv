@@ -1,0 +1,11 @@
+file,approved,source,snapshot_date,notes
+worldcup_2026_groups.csv,false,用户提供分组图,2026-06-15,待用户确认分组和队名
+worldcup_2026_schedule.csv,false,用户提供赛程图与淘汰赛图,2026-06-15,待用户确认日期时间场地和槽位
+worldcup_2026_results_asof_2026-06-15.csv,false,百度体育页面/用户截图口径,2026-06-15,待用户确认12场已赛比分
+worldcup_2026_results_asof_2026-06-17.csv,false,百度体育页面/用户截图口径,2026-06-17,待用户确认20场已赛比分
+worldcup_2026_results_asof_2026-06-19.csv,false,百度体育页面抓取,2026-06-19,待用户确认截至2026-06-19的28场已赛比分
+worldcup_2026_results_asof_2026-06-20.csv,false,百度体育页面抓取,2026-06-20 09:18,待用户确认截至抓取时明确标记已结束的30场比分；巴西对海地直播中未纳入
+worldcup_2026_standings_asof_2026-06-15.csv,false,百度体育排名页,2026-06-15,待用户确认排名积分进失球
+historical_matches.csv,false,待用户提供或确认,待确认,字段校验通过但来源和快照日期未确认
+team_elo.csv,false,待用户提供或确认,待确认,未提供；可确认允许从历史比赛推断简化Elo
+annex_c_full_mapping,false,待用户提供或确认,待确认,未提供完整495种映射；当前只使用候选第三名槽位约束

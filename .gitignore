@@ -7,6 +7,16 @@
 
 # Python 缓存
 scripts/__pycache__/
+**/__pycache__/
+*.pyc
 
 # macOS
 .DS_Store
+
+# 临时生成文件
+tmp/
+Rplots.pdf
+~$*
+
+# 历史提交包（GitHub 直接保留源码与最终报告）
+*.zip

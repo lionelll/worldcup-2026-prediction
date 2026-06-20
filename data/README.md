@@ -19,7 +19,7 @@
 采集规则：
 
 - 赛前基准模型只使用 2026-06-10 前信息。
-- 赛中更新版本额外使用 2026-06-15 已赛比分和当前排名。
+- 赛中调试版本额外使用截至 2026-06-20 09:18 明确完赛的 30 场比分；所有新增赛果均保留来源说明并等待用户确认，未明确完赛的直播比分不纳入。
 - 使用真实分组和真实赛程，不使用示意性分组。
 - 淘汰赛行保留官方槽位；含最佳第三名的场次以候选槽位集合记录。
 
@@ -35,7 +35,18 @@ match_id,stage,group,match_date,kickoff_time,team_1,team_2,venue,host_country,te
 group,slot,team
 ```
 
-`worldcup_2026_groups.csv` 与 `worldcup_2026_schedule.csv` 已按用户提供的百度体育分组/赛程/淘汰赛截图重建。正式提交前建议再与 FIFA 官方赛事页或官方赛程 PDF 做最终核对。
+Annex C 文件：`annex_c_full_mapping.csv`。字段为：
+
+```text
+qualified_groups,match_id,third_group,source_note
+```
+
+- `qualified_groups`：升序连写的 8 个出线第三名小组字母，例如 `ABCDEFGH`。
+- 每个 `qualified_groups` 必须有 8 行，对应 8 个最佳第三名槽位。
+- 完整文件必须覆盖 495 种组合，不允许重复比赛或重复小组。
+- `annex_c_full_mapping_template.csv` 只是空字段模板，不含任何猜测映射。
+
+`worldcup_2026_groups.csv` 与 `worldcup_2026_schedule.csv` 已按用户提供的百度体育分组/赛程/淘汰赛截图录入，但当前只视为“待确认数据”。正式提交前必须由用户确认，或再与 FIFA 官方赛事页、官方赛程 PDF 做最终核对。未经确认时，不得把这些数据对应的模型结果写入正式报告。
 
 ## 2. 历史比赛训练集
 
@@ -70,13 +81,28 @@ group,slot,team
 
 ## 5. 赛中结果更新
 
-文件名：`worldcup_2026_results_asof_2026-06-15.csv`
+文件名：`worldcup_2026_results_asof_2026-06-20.csv`
+
+历史快照：`worldcup_2026_results_asof_2026-06-15.csv`、`worldcup_2026_results_asof_2026-06-17.csv`
 
 当前排名文件：`worldcup_2026_standings_asof_2026-06-15.csv`
 
-该文件记录截至 2026-06-15 已核实的世界杯小组赛结果，用于将原先的赛前预测扩展为赛中动态更新分析。使用规则：
+该文件记录截至 2026-06-15 已录入但待最终确认的世界杯小组赛结果，用于将原先的赛前预测扩展为赛中动态更新分析。使用规则：
 
+- 小组赛最低字段为 `match_date,team_1,team_2,team_1_score,team_2_score`。
+- 若已开始录入淘汰赛，额外提供 `match_id,stage,winner,decided_by`；
+  `decided_by` 建议固定为 `90min`、`extra_time` 或 `penalties`。
+- 已确认的淘汰赛对手和胜者会在模拟中固定为 100%，不再抽样。
 - 已赛比分可以用于更新小组积分、净胜球和剩余赛程模拟。
 - 当前排名文件用于网页展示和人工核对；正式模拟仍优先由已赛比分和剩余赛程动态计算。
 - 不得把已赛结果回填进“赛前模型训练”中，否则会改变原始赛前预测口径。
 - 报告中应明确区分“赛前预测基准”和“赛中更新结果”。
+
+## 6. 数据确认闸门
+
+正式模型运行前必须检查：
+
+- `DATA_STATUS.md`：逐项说明当前数据是否可用于正式结果。
+- `data_approval.csv`：只有对应数据项 `approved=true` 后，R 主程序才允许正式运行。
+
+当前默认策略是：缺数据、来源不清、快照日期不明、字段含义不明时，不自行补造，不把调试结果写成正式结论。若仅用于检查代码流程，可以显式使用 `--allow-unconfirmed-data`，但该结果只能作为调试输出。
