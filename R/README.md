@@ -16,6 +16,7 @@
 - `output/prediction_vs_actual.csv`：逐场记录模型给出的胜/平/负概率、实际比分、是否命中、Brier Score、Log Loss 和比分误差。
 - `output/prediction_vs_actual_summary.csv`：汇总已录入赛果与模型预测之间的总体差异。
 - `output/in_tournament_elo_updates.csv`：记录已赛结果带来的 Elo 滚动变化。
+- `output/figures/fig5_3b_poisson_qq.png`：先列队与后列队泊松模型的 deviance residuals Q-Q 诊断图。
 - `output/run_metadata.csv`：记录模拟次数、随机种子、赛果快照和平局校准系数。
 - `output/team_route_nodes.csv`：保存逐队、逐轮、逐对手的条件路径节点和分支贡献。
 - `output/bracket_slot_probabilities.csv`：保存每个比赛槽位的球队占据概率和获胜贡献。

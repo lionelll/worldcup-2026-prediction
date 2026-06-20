@@ -587,17 +587,17 @@ def build_toc(doc):
     entries = [
         ("第一章　绪论", "4"),
         ("第二章　数据来源、状态与预处理", "6"),
-        ("第三章　探索性数据分析", "8"),
-        ("第四章　研究方法与模型实现", "12"),
-        ("第五章　模型训练、验证与诊断", "14"),
-        ("第六章　截至 2026-06-20 09:18 的赛中检验", "17"),
-        ("第七章　世界杯模拟结果", "20"),
-        ("第八章　赛中更新的影响", "25"),
-        ("第九章　结论、局限与改进方案", "27"),
-        ("参考文献与数据来源", "29"),
-        ("附录 A　R 代码与复现说明", "30"),
-        ("附录 B　运行一致性检查", "30"),
-        ("附录 C　网页展示与打开方式", "31"),
+        ("第三章　探索性数据分析", "9"),
+        ("第四章　研究方法与模型实现", "13"),
+        ("第五章　模型训练、验证与诊断", "15"),
+        ("第六章　截至 2026-06-20 09:18 的赛中检验", "22"),
+        ("第七章　世界杯模拟结果", "25"),
+        ("第八章　赛中更新的影响", "39"),
+        ("第九章　结论、局限与改进方案", "41"),
+        ("参考文献与数据来源", "43"),
+        ("附录 A　R 代码与复现说明", "44"),
+        ("附录 B　运行一致性检查", "44"),
+        ("附录 C　网页展示与打开方式", "45"),
     ]
     table = doc.add_table(rows=len(entries), cols=2)
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -996,7 +996,8 @@ def build_report(doc, *, draft: bool):
     add_table(doc, ["模型", "Null Dev.", "Residual Dev.", "AIC", "BIC", "离散度", "偏差下降率"], fit_rows,
               [1350, 1200, 1400, 1150, 1150, 950, CONTENT_WIDTH_DXA-7200], font_size=8.0)
     add_figure(doc, "fig5_3_poisson_diagnostics.png", "图 5-3　泊松残差、影响点与进球校准诊断", width_cm=15.0)
-    add_text(doc, "两套模型的 Pearson 离散度均大于 1，说明数据存在轻度过度离散。本文因此同时报告样本外 Brier Score、Log Loss 和滚动验证结果，不把系数显著性等同于预测效果。偏差下降率只用于描述相对空模型的拟合改善，不解释为线性回归 R²。")
+    add_figure(doc, "fig5_3b_poisson_qq.png", "图 5-4　泊松回归 Deviance residuals Q-Q 诊断", width_cm=15.0)
+    add_text(doc, "Q-Q 图用于识别 deviance residuals 相对标准正态参考线的系统偏离、重尾和异常点。需要强调，泊松 GLM 并不要求响应变量或残差服从正态分布，因此该图是近似分布诊断而不是泊松模型成立的必要正态性检验。两套模型的 Pearson 离散度均大于 1，说明数据存在轻度过度离散。本文因此同时报告样本外 Brier Score、Log Loss 和滚动验证结果，不把系数显著性等同于预测效果。偏差下降率只用于描述相对空模型的拟合改善，不解释为线性回归 R²。")
 
     add_heading(doc, "5.5 嵌套模型选择与时间滚动验证", 2)
     cv_means = defaultdict(list)
@@ -1016,7 +1017,7 @@ def build_report(doc, *, draft: bool):
     add_caption(doc, "表 5-6　候选泊松模型比较")
     add_table(doc, ["规格", "参数数", "AIC合计", "BIC合计", "滚动Log Loss", "最终Log Loss", "用途"], comparison_rows,
               [1750, 850, 1200, 1200, 1400, 1300, CONTENT_WIDTH_DXA-7700], font_size=8.0)
-    add_figure(doc, "fig5_4_model_comparison.png", "图 5-4　四组候选模型滚动验证 Log Loss", width_cm=14.0)
+    add_figure(doc, "fig5_4_model_comparison.png", "图 5-5　四组候选模型滚动验证 Log Loss", width_cm=14.0)
     add_text(doc, "滚动验证严格保持训练期早于验证期，未使用随机 K 折。模型选择以三个时间窗口的平均 Log Loss 为第一排序指标，Brier Score 为并列时的第二指标；2026 年最终测试集不参与选择。")
 
     add_heading(doc, "5.6 二元逻辑回归对照实验", 2)
@@ -1236,15 +1237,24 @@ def build_report(doc, *, draft: bool):
     refs = [
         "[1] Maher, M. J. (1982). Modelling association football scores. Statistica Neerlandica, 36(3), 109-118. DOI: 10.1111/j.1467-9574.1982.tb00782.x.",
         "[2] Dixon, M. J., & Coles, S. G. (1997). Modelling association football scores and inefficiencies in the football betting market. Journal of the Royal Statistical Society Series C, 46(2), 265-280. DOI: 10.1111/1467-9876.00065.",
-        "[3] FIFA. FIFA World Cup 26 official tournament page. https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026（赛制事实的首选核验源；当前分组和赛程文件尚未完成最终核验）。",
-        "[4] 百度体育. 世界杯赛程与排名页. https://tiyu.baidu.com/al/match?match=世界杯&tab=赛程&current=0（截至 2026-06-20 09:18 明确完赛的赛果录入口径，待用户确认；直播比赛未纳入）。",
-        "[5] 用户提供的 2026 世界杯分组、赛程与淘汰赛路径截图，提供日期 2026-06-15。",
-        "[6] data/historical_matches.csv，本地公开历史比赛快照；原始下载地址和快照日期待用户确认。",
-        "[7] R Core Team. R: A Language and Environment for Statistical Computing. R Foundation for Statistical Computing.",
-        "[8] Brier, G. W. (1950). Verification of forecasts expressed in terms of probability. Monthly Weather Review, 78(1), 1-3.",
+        "[3] Elo, A. E. (1978). The Rating of Chessplayers, Past and Present. Arco Publishing, New York.",
+        "[4] Metropolis, N., & Ulam, S. (1949). The Monte Carlo method. Journal of the American Statistical Association, 44(247), 335-341. DOI: 10.1080/01621459.1949.10483310.",
+        "[5] McCullagh, P., & Nelder, J. A. (1989). Generalized Linear Models (2nd ed.). Chapman and Hall/CRC. DOI: 10.1007/978-1-4899-3242-6.",
+        "[6] Karlis, D., & Ntzoufras, I. (2003). Analysis of sports data by using bivariate Poisson models. Journal of the Royal Statistical Society Series D, 52(3), 381-393. DOI: 10.1111/1467-9884.00366.",
+        "[7] Hvattum, L. M., & Arntzen, H. (2010). Using ELO ratings for match result prediction in association football. International Journal of Forecasting, 26(3), 460-470. DOI: 10.1016/j.ijforecast.2009.10.002.",
+        "[8] Koopman, S. J., & Lit, R. (2015). A dynamic bivariate Poisson model for analysing and forecasting match results in the English Premier League. Journal of the Royal Statistical Society Series A, 178(1), 167-186. DOI: 10.1111/rssa.12042.",
+        "[9] Brier, G. W. (1950). Verification of forecasts expressed in terms of probability. Monthly Weather Review, 78(1), 1-3.",
+        "[10] R Core Team. R: A Language and Environment for Statistical Computing. R Foundation for Statistical Computing.",
+        "[11] FIFA. FIFA World Cup 26 official tournament page. https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026（赛制事实的首选核验源；当前分组和赛程文件尚未完成最终核验）。",
+        "[12] 百度体育. 世界杯赛程与排名页. https://tiyu.baidu.com/al/match?match=世界杯&tab=赛程&current=0（截至 2026-06-20 09:18 明确完赛的赛果录入口径，待用户确认；直播比赛未纳入）。",
+        "[13] 用户提供的 2026 世界杯分组、赛程与淘汰赛路径截图，提供日期 2026-06-15。",
+        "[14] data/historical_matches.csv，本地公开历史比赛快照；原始下载地址和快照日期待用户确认。",
     ]
     for item in refs:
-        add_text(doc, item, indent=False, after=5, align=WD_ALIGN_PARAGRAPH.LEFT)
+        paragraph = add_text(doc, item, indent=False, after=3, align=WD_ALIGN_PARAGRAPH.LEFT)
+        paragraph.paragraph_format.line_spacing = 1.15
+        for run in paragraph.runs:
+            set_run_font(run, size=9.5)
     add_page_break(doc)
 
     add_heading(doc, "附录 A　R 代码与复现说明", 1)
@@ -1322,6 +1332,8 @@ def audit_docx(doc_path: Path):
         approved(r["approved"]) for r in read_csv(DATA / "data_approval.csv")
     )
     text = "\n".join(p.text for p in check.paragraphs)
+    assert "目　录" in text
+    assert "Deviance residuals Q-Q" in text
     forbidden = ["约 0.45", "胜率约为 75%", "占比最大但权重最高"]
     for phrase in forbidden:
         if phrase in text:

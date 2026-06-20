@@ -145,6 +145,26 @@ plot_poisson_diagnostics <- function(df, calibration, path) {
   dev.off()
 }
 
+plot_poisson_qq <- function(df, path) {
+  open_png(path, 2200, 1050)
+  op <- par(mfrow = c(1, 2), mar = c(5, 5, 4, 2), family = chart_family)
+  colors <- c(home = "#246B8E", away = "#D97706")
+  labels <- c(home = "先列队进球模型", away = "后列队进球模型")
+  for (outcome in c("home", "away")) {
+    residuals <- df$deviance_residual[df$outcome == outcome]
+    residuals <- residuals[is.finite(residuals)]
+    qqnorm(residuals, pch = 16, cex = 0.32,
+      col = grDevices::adjustcolor(colors[outcome], alpha.f = 0.32),
+      main = paste0(labels[outcome], " Q-Q 图"),
+      xlab = "标准正态理论分位数", ylab = "Deviance residual 样本分位数")
+    qqline(residuals, col = "#A61B29", lwd = 2)
+    grid(col = "#E5E7EB")
+  }
+  draw_preview_label()
+  par(op)
+  dev.off()
+}
+
 plot_model_comparison <- function(df, rolling, path) {
   rolling_mean <- aggregate(cbind(log_loss, brier_score) ~ model, rolling, mean)
   order_index <- order(rolling_mean$log_loss)
@@ -423,6 +443,7 @@ for (i in seq_along(featured)) {
 
 plot_data_quality(data_audit, file.path(figure_dir, "fig2_0_data_quality_audit.png"))
 plot_poisson_diagnostics(poisson_diagnostics, goal_calibration, file.path(figure_dir, "fig5_3_poisson_diagnostics.png"))
+plot_poisson_qq(poisson_diagnostics, file.path(figure_dir, "fig5_3b_poisson_qq.png"))
 plot_model_comparison(model_comparison, rolling_validation, file.path(figure_dir, "fig5_4_model_comparison.png"))
 plot_logistic_roc(logistic_roc, logistic_metrics, file.path(figure_dir, "fig5_5_logistic_roc.png"))
 
