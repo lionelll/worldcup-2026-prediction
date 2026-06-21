@@ -1,119 +1,95 @@
-# 2026 年世界杯冠军概率预测
+# 2026 年世界杯冠军概率预测 - 完整代码
 
-基于历史比赛数据与蒙特卡洛模拟的 2026 年世界杯冠军概率预测研究。
-
-## 当前状态
-
-当前项目已经具备 R 语言代码、报告草稿、网页展示、分组/赛程/已赛结果等结构化文件，但正式预测结果暂不输出为结论。原因是数据来源仍需用户确认。
-
-关键原则：
-
-- 缺数据时必须先向用户确认，不自行补造。
-- 涉及数据来源、赛果、排名、赛程、训练集和 Elo 的内容，必须有来源与快照日期。
-- 未经确认的数据可以用于代码调试，但不能写入正式报告结论。
-
-## 研究方法
-
-- **主模型**：泊松回归（`glm(..., family = poisson())`），预测双方 90 分钟进球数。
-- **模拟方式**：蒙特卡洛模拟完整赛程。
-- **对照模型**：二元逻辑回归，用于“第一列球队获胜 vs 非获胜”的解释、ROC/AUC 与概率质量对比；不进入赛事模拟。
-- **课程方法补强**：数据质量审计、泊松 GLM 显著性与离散度诊断、AIC/BIC 嵌套模型比较、rolling-origin 时间交叉验证。
-- **残差诊断**：包含残差-拟合值、Pearson 残差、Cook's distance、进球校准和 deviance residuals Q-Q 图；Q-Q 图作为分布偏离诊断，不把残差正态性作为泊松 GLM 的成立前提。
-- **训练数据**：`data/historical_matches.csv` 已存在且字段校验通过，但来源、快照日期和使用许可仍需确认。
-- **赛中更新**：截至 `2026-06-20 09:18` 明确完赛的 30 场结果已录入；赛果用于当前积分、滚动 Elo 和近 10 场状态，正式使用前仍需确认。
-- **时间边界**：历史 Elo、近期状态均按比赛日期逐场生成，禁止将最终评分回填到过去比赛。
-- **概率校准**：2025 年比赛用于拟合平局校准系数，2026-01-01 至 2026-06-10 用于独立验证。
-
-## 数据确认
-
-正式运行前先看：
-
-- `data/DATA_STATUS.md`
-- `data/data_approval.csv`
-
-只有 `data/data_approval.csv` 中相关数据项的 `approved` 为 `true` 时，`R/worldcup_predictor.R` 才会作为正式模型运行。否则主程序会停止并提示需要确认哪些数据。
-
-当前待确认项包括：
-
-- 分组与队名。
-- 小组赛和淘汰赛赛程。
-- 截至 `2026-06-20 09:18` 的 30 场已赛比分和当前排名；直播中的比赛不纳入。
-- `historical_matches.csv` 的来源与快照日期。
-- 是否提供 `team_elo.csv`，或是否允许用历史比赛推断简化 Elo。
-- 是否提供 FIFA Annex C 完整 495 种最佳第三名映射。
+基于历史比赛数据、泊松回归与蒙特卡洛模拟的 2026 年世界杯冠军概率预测。
 
 ## 目录结构
 
-```text
-.
-├── R/                          # 主代码（R 语言）
-│   ├── worldcup_predictor.R    # 建模与模拟主程序
-│   ├── compare_snapshots.R     # 相同随机种子下的赛中快照概率变化
-│   ├── validate_inputs.R       # 输入数据校验
-│   ├── test_route_outputs.R    # 路线/签表概率一致性测试
-│   └── make_charts.R           # 报告图表与网页数据生成
-├── data/                       # 输入数据与数据确认清单
-│   ├── DATA_STATUS.md
-│   ├── data_approval.csv
-│   ├── historical_matches.csv
-│   ├── worldcup_2026_groups.csv
-│   ├── worldcup_2026_schedule.csv
-│   ├── worldcup_2026_results_asof_2026-06-20.csv
-│   └── worldcup_2026_standings_asof_2026-06-15.csv
-├── output/                     # 调试输出；确认前不得作为正式结果
-├── scripts/                    # Python 辅助脚本
-└── web/                        # 静态网页仪表盘
+```
+./
+├── backend/                        # R 代码、数据与模型输出
+│   ├── R/                          # 主代码（纯 base R）
+│   │   ├── worldcup_predictor.R    # 建模与蒙特卡洛模拟主程序
+│   │   ├── make_charts.R           # 图表生成
+│   │   ├── validate_inputs.R       # 输入数据校验
+│   │   ├── test_route_outputs.R    # 路线与概率一致性测试
+│   │   └── compare_snapshots.R     # 赛中快照概率对比
+│   ├── data/                       # 输入数据
+│   ├── output/                     # 模型输出与图表
+│   ├── assets/                     # 报告素材
+│   └── report_tools/               # Word 报告生成工具
+├── frontend/                       # 静态网页
+│   ├── index.html
+│   ├── styles.css
+│   ├── app.js
+│   └── data/                       # 前端数据副本
+├── scripts/                        # 运行、校验与同步脚本
+├── RESOURCE_MANIFEST.md            # 运行资源说明
+└── README.md
 ```
 
-## 运行步骤
+## 运行环境
+
+- **R**：base R，无需安装额外 R 包。
+- **Python**：Python 3，用于启动静态网页。
+- **报告工具**：重新生成 Word 时安装 `backend/report_tools/requirements.txt`。
+- **操作系统**：macOS / Linux；Windows 使用 Git Bash 或 WSL 运行 Shell 脚本。
+
+## 后端运行
+
+在仓库根目录执行：
 
 ```bash
-# 1. 校验输入字段和日期边界
-Rscript R/validate_inputs.R
+# 检查当前资源
+./scripts/verify_resources.sh validate
 
-# 2. 正式运行预测管线
-Rscript R/worldcup_predictor.R
-
-# 3. 校验路线概率、签表槽位和唯一冠军等不变量
-Rscript R/test_route_outputs.R
+# 运行当前数据快照
+./scripts/run_backend.sh validate
 ```
 
-如果数据尚未确认，第二步会停止。只做代码调试时可显式运行：
+正式模式使用：
 
 ```bash
-Rscript R/worldcup_predictor.R --allow-unconfirmed-data
+./scripts/run_backend.sh formal
 ```
 
-该参数下产生的结果不能写入正式报告。
+缺少完整 Annex C 映射或数据确认未通过时，正式模式会停止，不会补造数据。
 
-图表生成：
+## 必需数据
 
-```bash
-Rscript R/make_charts.R
-```
+R 后端需要 `backend/data/` 下的以下文件：
 
-小组实时判断输出为 `output/current_group_status.csv`。它按已结束比分生成积分表，
-并穷举剩余胜平负组合，保守判断是否锁定或无缘小组前二。
+| 文件 | 说明 |
+|------|------|
+| `historical_matches.csv` | 2010-2026 年国际足球比赛数据 |
+| `worldcup_2026_groups.csv` | 48 队分组 |
+| `worldcup_2026_schedule.csv` | 小组赛与淘汰赛赛程 |
+| `worldcup_2026_results_asof_2026-06-20.csv` | 截至 6 月 20 日的 32 场赛果 |
+| `data_approval.csv` | 数据确认状态 |
 
-路线模块的主要输出为 `output/team_route_nodes.csv`、
-`output/bracket_slot_probabilities.csv` 和 `output/group_position_probabilities.csv`。
-课程方法诊断输出包括 `output/data_quality_audit.csv`、
-`output/poisson_fit_statistics.csv`、`output/poisson_model_comparison.csv`、
-`output/rolling_origin_validation.csv` 和 `output/logistic_metrics.csv`。
-正式模式必须提供完整且通过 495 种组合校验的
-`data/annex_c_full_mapping.csv`；缺失时程序会停止。
+`annex_c_full_mapping.csv` 是正式模式必需资源，当前尚未提供；`team_elo.csv` 为可选资源。详见 `RESOURCE_MANIFEST.md`。
+
+## 主要输出
+
+- `backend/output/champion_probabilities.csv` - 48 队夺冠概率。
+- `backend/output/final_four_probabilities.csv` - 四强概率。
+- `backend/output/team_stage_probabilities.csv` - 各阶段晋级概率。
+- `backend/output/group_advancement_probabilities.csv` - 小组出线概率。
+- `backend/output/prediction_vs_actual.csv` - 逐场预测与实际结果。
+- `backend/output/figures/` - 模型诊断及预测图表。
 
 ## 网页展示
 
 ```bash
-cd web && python3 -m http.server 8000
+./scripts/serve_frontend.sh
 ```
 
-打开：
+浏览器打开 `http://127.0.0.1:8000`。网页不需要安装前端依赖。
 
-```text
-http://127.0.0.1:8000
-```
+## 研究方法
 
-网页还提供小组晋级概览、完整签表和西班牙/法国/阿根廷/巴西/葡萄牙的
-条件晋级路线。未确认 Annex C 时只显示带警示的调试预览，不作为正式结论。
+- **主模型**：泊松回归，预测双方 90 分钟进球数。
+- **特征**：动态 Elo、近 10 场滚动状态和场地赛事变量。
+- **模拟**：10,000 次蒙特卡洛完整赛事模拟，随机种子为 `20260615`。
+- **对照模型**：二元逻辑回归，不进入赛事模拟。
+- **验证**：独立测试集与 rolling-origin 时间交叉验证。
+- **诊断**：显著性、离散度、AIC/BIC、残差图、Q-Q 图与 ROC/AUC。

@@ -1,0 +1,11 @@
+"metric","value"
+"samples",311
+"accuracy",0.668810289389068
+"brier_score",0.20666375673125
+"log_loss",0.600651024501377
+"auc",0.741211018281082
+"threshold",0.5
+"confusion_actual_0_pred_0",104
+"confusion_actual_0_pred_1",53
+"confusion_actual_1_pred_0",50
+"confusion_actual_1_pred_1",104

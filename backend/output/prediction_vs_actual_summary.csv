@@ -1,0 +1,11 @@
+"metric","value"
+"matches",32
+"correct",18
+"accuracy",0.5625
+"brier_score",0.606186269815915
+"log_loss",0.997584396776833
+"mean_score_abs_error",1.90383141668801
+"actual_draws",10
+"predicted_draws",0
+"mean_predicted_draw_probability",0.239673522843673
+"draw_calibration_multiplier",1.13680752812437
